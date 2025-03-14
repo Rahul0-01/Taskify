@@ -6,9 +6,11 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
@@ -32,30 +34,26 @@ Provides a secure way to hash passwords.
 Allows password verification when users log in. */
 
 
-        @Bean
-        public BCryptPasswordEncoder passwordEncoder() {
-            return new BCryptPasswordEncoder();
-        }
-
-
-
-
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .csrf(csrf -> csrf.disable()) // Disable CSRF
-                .authorizeHttpRequests(auth -> auth
-                        //.requestMatchers("/h2-console/**").permitAll() // Allow H2 Console
-                        .anyRequest().permitAll() // ALLOW ALL REQUESTS
-                )
-                .headers(headers -> headers.frameOptions(frame -> frame.disable())) // Fix H2 Console UI
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-
-                .httpBasic(withDefaults());
-
-        return http.build();
+    public BCryptPasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 
 
-}
+      @Bean
+        public SecurityFilterChain securityFilterChain (HttpSecurity http) throws Exception {
+            http
+                    .csrf(AbstractHttpConfigurer::disable) // Disable CSRF
+                    .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Stateless session
+                    .authorizeHttpRequests(auth -> auth
+                            .requestMatchers("/users/login", "/users/register").permitAll() // Allow login & register
+                            .anyRequest().authenticated() // All other requests need authentication
+                    );
+
+            return http.build();
+        }
+
+
+    }
+
 
