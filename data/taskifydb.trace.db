@@ -1,0 +1,12 @@
+2025-03-13 11:29:20.332666+05:30 jdbc[13]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "[*]USERS"; expected "UPDATE"; SQL statement:
+USERS [42001-232]
+2025-03-13 11:35:45.950215+05:30 jdbc[13]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "USERSTASK" not found; SQL statement:
+SELECT * FROM USERSTASK TASK [42102-232]
+2025-03-14 09:17:33.593940+05:30 jdbc[13]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "Select * from [*]USER"; expected "identifier"; SQL statement:
+Select * from USER [42001-232]
+2025-03-14 09:17:54.217823+05:30 jdbc[13]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "Select * From [*]USER"; expected "identifier"; SQL statement:
+Select * From USER [42001-232]
