@@ -7,6 +7,8 @@ It ensures passwords and usernames are stored properly and that roles are linked
 
 package com.Rahul.taskify.Model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
