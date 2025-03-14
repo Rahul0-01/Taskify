@@ -38,13 +38,19 @@ Allows password verification when users log in. */
         }
 
 
+
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable()) // Disable CSRF
                 .authorizeHttpRequests(auth -> auth
+                        //.requestMatchers("/h2-console/**").permitAll() // Allow H2 Console
                         .anyRequest().permitAll() // ALLOW ALL REQUESTS
                 )
+                .headers(headers -> headers.frameOptions(frame -> frame.disable())) // Fix H2 Console UI
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
                 .httpBasic(withDefaults());
 
         return http.build();

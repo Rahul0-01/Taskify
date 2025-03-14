@@ -1,5 +1,6 @@
 package com.Rahul.taskify.Controller;
 
+import com.Rahul.taskify.Model.LoginRequest;
 import com.Rahul.taskify.Model.User;
 import com.Rahul.taskify.Repository.UserRepository;
 import com.Rahul.taskify.Service.UserService;
@@ -16,13 +17,18 @@ public class UserController {
     private UserService userService;
 
     @PostMapping("/register")
-    public ResponseEntity<User> registerUser(@RequestBody User user){
+    public ResponseEntity<?> registerUser(@RequestBody User user){
         return userService.registerUser(user);
     }
 
     @GetMapping("/{username}")
     public ResponseEntity<?> getUserByUserName(@PathVariable String username) {
-        return userService.getUserByUserName(username);
+        return ResponseEntity.ok().body(userService.getUserByUserName(username));
     }
+
+   @PostMapping("/login")
+    public ResponseEntity<?> loginUser(@RequestBody LoginRequest loginRequest){
+     return userService.loginUser(loginRequest);
+  }
 
 }
