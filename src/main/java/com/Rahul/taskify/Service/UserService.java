@@ -2,6 +2,7 @@
 
 package com.Rahul.taskify.Service;
 
+import com.Rahul.taskify.JwUtil;
 import com.Rahul.taskify.Model.LoginRequest;
 import com.Rahul.taskify.Model.User;
 import com.Rahul.taskify.Repository.UserRepository;
@@ -25,8 +26,11 @@ public class UserService {
     @Autowired
     private AuthenticationManager authenticationManager;
     @Autowired
-   private UserRepository repo;      // this is the object of repository class which will help us to do databse related function
+   private UserRepository repo;// this is the object of repository class which will help us to do databse related function
 
+
+    @Autowired
+    private  JwUtil jwUtil;
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;      // this is used to encrypt password before adding the user password to the database for security
 
@@ -84,8 +88,8 @@ public class UserService {
             response.put("id", user.getId());
             response.put("userName", user.getUserName());
             response.put("roles", user.getRoles());
-
-            return ResponseEntity.ok(response);
+            String token = jwUtil.generateToken(user.getUserName());
+            return ResponseEntity.ok(token);
         } catch (Exception e) {
             System.out.println("DEBUG: Login failed for user -> " + loginRequest.getUserName() + " | Error: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password");
