@@ -51,6 +51,7 @@ public class JwUtil {
                             .getBody()
             );
         } catch (JwtException e) {
+
             throw new RuntimeException("Invalid JWT Token!");
         }
     }
