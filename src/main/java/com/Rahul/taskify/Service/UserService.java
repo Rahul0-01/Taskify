@@ -43,8 +43,15 @@ public class UserService {
      // Hash password before saving
      user.setPassword(passwordEncoder.encode(user.getPassword()));
 
+     if (user.getRoles() == null || user.getRoles().isEmpty()) {
+         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Role must be provided");
+     }
+
+
      // Save user
      repo.save(user);
+
+
 
      return ResponseEntity.ok("User registered successfully");
  }
@@ -81,6 +88,7 @@ public class UserService {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(loginRequest.getUserName(), loginRequest.getUserPassword())
             );
+            System.out.println("Roles assigned to user: " + user.getRoles());
 
             System.out.println("DEBUG: User authenticated successfully -> " + loginRequest.getUserName());
 

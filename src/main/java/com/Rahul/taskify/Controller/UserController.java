@@ -6,6 +6,7 @@ import com.Rahul.taskify.Repository.UserRepository;
 import com.Rahul.taskify.Service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,5 +31,11 @@ public class UserController {
     public ResponseEntity<?> loginUser(@RequestBody LoginRequest loginRequest){
      return userService.loginUser(loginRequest);
   }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/admin")
+    public ResponseEntity<?> adminEndpoint() {
+        return ResponseEntity.ok("Welcome Admin! You have access.");
+    }
 
 }
