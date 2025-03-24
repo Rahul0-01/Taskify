@@ -34,7 +34,7 @@ public class UserController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/admin")
-    public ResponseEntity<?> adminEndpoint() {
+    public ResponseEntity<?> adminPage() {
         return ResponseEntity.ok("Welcome Admin! You have access.");
     }
 

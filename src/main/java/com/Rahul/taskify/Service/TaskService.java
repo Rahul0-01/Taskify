@@ -1,7 +1,10 @@
 package com.Rahul.taskify.Service;
 
 import com.Rahul.taskify.Model.Task;
+import com.Rahul.taskify.Model.User;
 import com.Rahul.taskify.Repository.TaskRepository;
+import com.Rahul.taskify.Repository.UserRepository;
+import com.Rahul.taskify.Util.AuthUtil;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -14,36 +17,42 @@ import java.util.List;
 public class TaskService {
 
     @Autowired
-    TaskRepository repo;
+    private TaskRepository repo;
 
+    @Autowired
+    private UserRepository userRepo;
 
-    public void createTask(Task task){
-        repo.save(task);
+    public Task createTask(Task task) {
+        User user = AuthUtil.getCurrentUser(userRepo);
+        task.setUser(user);
+       return repo.save(task);
     }
 
     public List<Task> getAllTask() {
-        return repo.findAll();
+        User user = AuthUtil.getCurrentUser(userRepo);
+        return repo.findAllByUser(user);
     }
 
     public Task getTaskById(long id) {
-        // below i am using else throw because it was showing 505 internal server error when i am using wrong id....so this is used for showing 404 error
-        return repo.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found"));
-
+        User user = AuthUtil.getCurrentUser(userRepo);
+        return repo.findByIdAndUser(id, user)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found for this user"));
     }
 
     public Task updateTask(long id, Task updatedTask) {
-        return repo.findById(id)
+        User user = AuthUtil.getCurrentUser(userRepo);
+        return repo.findByIdAndUser(id, user)
                 .map(task -> {
                     task.setTitle(updatedTask.getTitle());
                     task.setDescription(updatedTask.getDescription());
                     task.setCompleted(updatedTask.isCompleted());
                     return repo.save(task);
-
-                }).orElse(null);
+                }).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found for this user"));
     }
 
     public void deleteTask(long id) {
-        Task task = repo.findById(id)
+        User user = AuthUtil.getCurrentUser(userRepo);
+        Task task = repo.findByIdAndUser(id, user)
                 .orElseThrow(() -> new EntityNotFoundException("Task not found with id: " + id));
         repo.delete(task);
     }
