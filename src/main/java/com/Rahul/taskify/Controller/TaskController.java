@@ -6,6 +6,7 @@ import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -19,60 +20,55 @@ public class TaskController {
     TaskService service;
 
     @PostMapping("/create")
-    public ResponseEntity<String> createTask(@RequestBody Task task){
-          service.createTask(task);
-          return ResponseEntity.ok("Successfully created");
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Task> createTask(@RequestBody Task task) {
+        Task createdTask = service.createTask(task);
+        return ResponseEntity.ok(createdTask);
     }
 
     @GetMapping("/getAllTask")
-    public List<Task> getAllTask(){
+    @PreAuthorize("isAuthenticated()")
+    public List<Task> getAllTask() {
         return service.getAllTask();
     }
 
     @GetMapping("/getTask/{id}")
-    public ResponseEntity<Task> getTaskById(@PathVariable long id){
-         Task task = service.getTaskById(id);
-         if(task != null){
-             return ResponseEntity.ok(task);
-         }
-         else{
-             return  ResponseEntity.notFound().build();
-         }
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Task> getTaskById(@PathVariable long id) {
+        Task task = service.getTaskById(id);
+        if (task != null) {
+            return ResponseEntity.ok(task);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @PutMapping("/update/{id}")
-    public ResponseEntity<Task> updateTask(@PathVariable long id , @RequestBody Task updatedTask ){
-      Task task = service.updateTask(id,updatedTask);
-    if(task != null){
-        return ResponseEntity.ok(task);
-    }
-    else{
-        return ResponseEntity.notFound().build();
-    }
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Task> updateTask(@PathVariable long id, @RequestBody Task updatedTask) {
+        Task task = service.updateTask(id, updatedTask);
+        if (task != null) {
+            return ResponseEntity.ok(task);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<String> deleteTask(@PathVariable long id){
-            try{
-                service.deleteTask(id);
-                return ResponseEntity.ok("Task Deleted Successfully");
-            }
-            catch(EntityNotFoundException e){
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Task Not found");
-            } catch (Exception e) {
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while deleting the task");
-
-            }
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<String> deleteTask(@PathVariable long id) {
+        try {
+            service.deleteTask(id);
+            return ResponseEntity.ok("Task Deleted Successfully");
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Task Not Found");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while deleting the task");
+        }
     }
 
-
-
-// below is used because when when 404 not foung error was coming then with it .... i am getting a long error message , so to remove this and to get only
-    // user friendly error message i am using this .
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<String> handleNotFound(ResponseStatusException ex) {
         return ResponseEntity.status(ex.getStatusCode()).body(ex.getReason());
-        // Returns only "Task not found" instead of a long error message
     }
-
 }

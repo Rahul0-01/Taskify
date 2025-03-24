@@ -25,5 +25,5 @@ public class User {
 
     @JsonProperty("roles")
     @JsonDeserialize(as = java.util.HashSet.class)  // ✅ Fix for deserialization
-    private Set<String> roles;  // ✅ Use Set<String>, NOT String
+    private Set<String> roles;  // ✅ Use Set<String>
 }

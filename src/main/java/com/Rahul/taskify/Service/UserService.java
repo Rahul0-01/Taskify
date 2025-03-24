@@ -78,26 +78,28 @@ public class UserService {
             System.out.println("DEBUG: Encrypted Password from DB -> " + user.getPassword());
             System.out.println("DEBUG: Password entered by user -> " + loginRequest.getUserPassword());
 
-            // **Check if passwords match**
+            // Check if passwords match
             if (!passwordEncoder.matches(loginRequest.getUserPassword(), user.getPassword())) {
                 System.out.println("DEBUG: Password mismatch for user -> " + loginRequest.getUserName());
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid password");
             }
 
-            // **Authenticate user**
+            // Authenticate user
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(loginRequest.getUserName(), loginRequest.getUserPassword())
             );
             System.out.println("Roles assigned to user: " + user.getRoles());
-
             System.out.println("DEBUG: User authenticated successfully -> " + loginRequest.getUserName());
 
-            Map<String, Object> response = new HashMap<>();
-            response.put("id", user.getId());
-            response.put("userName", user.getUserName());
-            response.put("roles", user.getRoles());
+            // Generate token
             String token = jwUtil.generateToken(user.getUserName());
-            return ResponseEntity.ok(token);
+
+            // Prepare JSON response
+            Map<String, Object> responseMap = new HashMap<>();
+            responseMap.put("token", token);
+            responseMap.put("roles", user.getRoles());
+
+            return ResponseEntity.ok(responseMap);
         } catch (Exception e) {
             System.out.println("DEBUG: Login failed for user -> " + loginRequest.getUserName() + " | Error: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password");
