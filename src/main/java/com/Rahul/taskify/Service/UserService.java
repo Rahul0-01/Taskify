@@ -16,6 +16,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -40,12 +41,19 @@ public class UserService {
          return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Username already exists");
      }
 
+     if (user.getPassword().length() < 5) {
+         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Password must be at least 5 characters long");
+     }
+
      // Hash password before saving
      user.setPassword(passwordEncoder.encode(user.getPassword()));
 
      if (user.getRoles() == null || user.getRoles().isEmpty()) {
          return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Role must be provided");
      }
+//     if (!Arrays.asList("[USER]", "[ADMIN]").contains(user.getRoles())) {
+//         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid role");
+//     }
 
 
      // Save user
