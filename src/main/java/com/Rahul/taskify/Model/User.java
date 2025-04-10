@@ -53,4 +53,9 @@ public class User {
     @OneToMany(mappedBy = "assignedTo")
     @JsonIgnore
     private List<Task> assignedTasks;
+
+    public void setUpdatedAtNow() {
+        this.updatedAt = java.time.LocalDateTime.now();
+    }
+
 }

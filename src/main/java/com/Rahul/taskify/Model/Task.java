@@ -1,9 +1,6 @@
 package com.Rahul.taskify.Model;
 
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import com.fasterxml.jackson.annotation.*;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -30,9 +27,12 @@ public class Task {
 
     private String title; // The title of the task
 
-    private String description; // Detailed description of the task
+    @Lob
+    private String description;
+    // Detailed description of the task
 
-    private LocalDateTime dueDate;  // Task's due date
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    private LocalDateTime dueDate; // Task's due date
 
     private String priority; // Priority (Low, Medium, High)
 

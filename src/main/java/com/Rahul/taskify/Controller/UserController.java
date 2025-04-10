@@ -19,6 +19,7 @@ public class UserController {
 
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody User user){
+
         return userService.registerUser(user);
     }
 
@@ -37,5 +38,19 @@ public class UserController {
     public ResponseEntity<?> adminPage() {
         return ResponseEntity.ok("Welcome Admin! You have access.");
     }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/allUsers")
+    public ResponseEntity<?> getAllUsers(){
+        return ResponseEntity.ok(userService.getAllUsers());
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/DeleteUser/{userId}")
+    public ResponseEntity<?> deleteUser(@PathVariable long userId){
+        System.out.println("Hi delete method of controleler is being calleing");
+        return ResponseEntity.ok(userService.deleteUser(userId));
+    }
+
 
 }

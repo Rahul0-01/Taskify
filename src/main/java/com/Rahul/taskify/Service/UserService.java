@@ -16,10 +16,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class UserService {
@@ -47,13 +44,23 @@ public class UserService {
 
      // Hash password before saving
      user.setPassword(passwordEncoder.encode(user.getPassword()));
+     user.setRoles(Set.of("USER"));
 
-     if (user.getRoles() == null || user.getRoles().isEmpty()) {
-         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Role must be provided");
-     }
+
+//     if (user.getRoles() == null || user.getRoles().isEmpty()) {
+//         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Role must be provided");
+//     }
 //     if (!Arrays.asList("[USER]", "[ADMIN]").contains(user.getRoles())) {
 //         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid role");
 //     }
+     //Set<String> allowedRoles = Set.of("USER", "ADMIN");
+
+//     for (String role : user.getRoles()) {
+//         if (!allowedRoles.contains(role)) {
+//             throw new IllegalArgumentException("Only USER or ADMIN roles are allowed for registration.");
+//         }
+//     }
+
 
 
      // Save user
@@ -96,7 +103,7 @@ public class UserService {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(loginRequest.getUserName(), loginRequest.getUserPassword())
             );
-            System.out.println("Roles assigned to user: " + user.getRoles());
+
             System.out.println("DEBUG: User authenticated successfully -> " + loginRequest.getUserName());
 
             // Generate token
@@ -111,6 +118,24 @@ public class UserService {
         } catch (Exception e) {
             System.out.println("DEBUG: Login failed for user -> " + loginRequest.getUserName() + " | Error: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password");
+        }
+    }
+
+    public ResponseEntity<?> getAllUsers() {
+        return ResponseEntity.ok(repo.findAll());
+    }
+
+    public ResponseEntity<?> deleteUser(long userId) {
+        System.out.println("Hii till here is okay means delete method is being called properly ");
+        Optional<User> userOptional = repo.findById(userId);
+        System.out.println("still working wow");
+
+        if (userOptional.isPresent()) {
+
+            repo.deleteById(userId);
+            return ResponseEntity.ok("User deleted successfully");
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found with ID: " + userId);
         }
     }
 

@@ -1,3 +1,21 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+/* Example neon/holographic style */
+.holo-card {
+    position: relative;
+    background: rgba(0, 0, 0, 0.2); 
+    border: 2px solid rgba(0,255,255,0.8);
+    box-shadow: 0 0 10px rgba(0,255,255,0.6), 
+                0 0 30px rgba(0,255,255,0.4) inset;
+    backdrop-filter: blur(8px); /* optional 'glass' effect */
+    border-radius: 1rem;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  
+  .holo-card.projecting {
+    transform: scale(1.02);
+    box-shadow: 0 0 20px rgba(0,255,255,0.8),
+                0 0 60px rgba(0,255,255,0.6) inset;
+  }
+  
