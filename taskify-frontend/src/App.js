@@ -4,7 +4,16 @@ import Login from "./pages/Login";
 import Home from "./pages/Home";
 import Dashboard from "./pages/Dashboard";
 import TaskList from "./pages/TaskList";
-import ProtectedRoute from "./ProtectedRoute";   // import kiya
+import TaskDetail from "./pages/TaskDetail";
+import TaskDetail_1 from "./pages/TaskDetail_1";
+import Register from "./pages/Register";
+import AdminPage from './pages/AdminPage';
+import ProtectedRoute from "./ProtectedRoute"; 
+import UserDetailsPage from "./pages/UsersDetailsPage";  
+import Taskforuser from "./pages/Tasktemp";
+import AutoCompleteInput from './AutoCompleteInput';
+
+
 
 function App() {
   return (
@@ -13,24 +22,57 @@ function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/" element={<Home />} />
-        <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/admin/users/:userid" element={<UserDetailsPage />} />
+        <Route path="/admin/tasks/:userid" element={<Taskforuser />} />
 
-        {/* Ye protected routes hain */}
-        <Route 
-          path="/tasks" 
+        {/* ✅ New test route to check autocomplete */}
+        <Route path="/test-autocomplete" element={<AutoCompleteInput />} />
+
+        {/* ✅ Protected Routes */}
+        <Route
+          path="/tasks"
           element={
             <ProtectedRoute>
               <TaskList />
             </ProtectedRoute>
-          } 
+          }
         />
-        <Route 
-          path="/dashboard" 
+
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute requiredRole="ADMIN">
+              <AdminPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/dashboard"
           element={
             <ProtectedRoute>
               <Dashboard />
             </ProtectedRoute>
-          } 
+          }
+        />
+
+        <Route
+          path="/task/:id"
+          element={
+            <ProtectedRoute>
+              <TaskDetail />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/task_1/:id"
+          element={
+            <ProtectedRoute>
+              <TaskDetail_1 />
+            </ProtectedRoute>
+          }
         />
       </Routes>
     </>
