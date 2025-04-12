@@ -232,6 +232,7 @@ public class TaskService {
         task.setStatus("Completed");
         task.setUpdatedAt(LocalDateTime.now());
         return repo.save(task);
+
     }
 
     /**

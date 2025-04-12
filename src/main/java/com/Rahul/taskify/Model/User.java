@@ -33,6 +33,12 @@ public class User {
 
     private String password;
 
+    @Column(nullable = false, unique = true)
+    private String email;
+
+
+
+
     @JsonProperty("roles")
     @JsonDeserialize(as = java.util.HashSet.class)
     private Set<String> roles;

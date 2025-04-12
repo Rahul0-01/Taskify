@@ -1,54 +1,64 @@
-import React, { useEffect, useState } from 'react';
+// src/components/AutoCompleteInput.jsx
+import React, { useEffect, useState, useRef } from 'react';
 
-const AutoCompleteInput = () => {
-  const [dictionary, setDictionary] = useState([]);
-  const [input, setInput] = useState('');
+const AutoCompleteInput = ({ value, onChange, placeholder = "Start typing..." }) => {
+  const [dictionary, setDictionary] = useState({});
   const [suggestions, setSuggestions] = useState([]);
+  const inputRef = useRef();
 
   useEffect(() => {
-    // Fetch the dictionary from public folder
     fetch('/WordsDictionary.json')
       .then(res => res.json())
-      .then(data => setDictionary(Object.keys(data)));
+      .then(data => setDictionary(data));
   }, []);
 
-  const handleChange = (e) => {
-    const value = e.target.value;
-    setInput(value);
+  const handleInputChange = (e) => {
+    const val = e.target.value;
+    onChange(val); // Update parent
+    const words = val.trim().split(' ');
+    const lastWord = words[words.length - 1];
 
-    if (value.trim() === '') {
-      setSuggestions([]);
-      return;
-    }
+    if (!lastWord) return setSuggestions([]);
 
-    const matches = dictionary
-      .filter(word => word.toLowerCase().startsWith(value.toLowerCase()))
-      .slice(0, 5); // Top 5 suggestions
+    const matches = Object.entries(dictionary)
+      .filter(([word]) => word.toLowerCase().startsWith(lastWord.toLowerCase()))
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([word]) => word);
 
     setSuggestions(matches);
   };
 
   const handleSuggestionClick = (word) => {
-    setInput(word);
+    const words = value.trim().split(' ');
+    words[words.length - 1] = word;
+    const newInput = words.join(' ') + ' ';
+    onChange(newInput);
     setSuggestions([]);
+
+    // Focus input again
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
   };
 
   return (
-    <div className="relative w-80 mx-auto mt-10">
+    <div className="relative">
       <input
+        ref={inputRef}
         type="text"
-        value={input}
-        onChange={handleChange}
-        className="border p-2 w-full rounded"
-        placeholder="Start typing..."
+        value={value}
+        onChange={handleInputChange}
+        className="w-full bg-gray-700 text-white placeholder-gray-300 border border-gray-600 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-400"
+        placeholder={placeholder}
       />
       {suggestions.length > 0 && (
-        <ul className="absolute z-10 bg-white border w-full rounded shadow max-h-40 overflow-auto">
+        <ul className="absolute z-10 bg-white text-black w-full rounded shadow max-h-40 overflow-auto">
           {suggestions.map((word, index) => (
             <li
               key={index}
               onClick={() => handleSuggestionClick(word)}
-              className="p-2 cursor-pointer hover:bg-gray-100"
+              className="p-2 cursor-pointer hover:bg-gray-200"
             >
               {word}
             </li>
