@@ -32,44 +32,47 @@ public class UserService {
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;      // this is used to encrypt password before adding the user password to the database for security
 
- // this is the method to register user
- public ResponseEntity<?> registerUser(User user) {
-     if (repo.findByUserName(user.getUserName()).isPresent()) {
-         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Username already exists");
-     }
+    @Autowired
+    private EmailService emailService;
 
-     if (user.getPassword().length() < 5) {
-         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Password must be at least 5 characters long");
-     }
+    public ResponseEntity<?> registerUser(User user) {
+        if (repo.findByUserName(user.getUserName()).isPresent()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Username already exists");
+        }
 
-     // Hash password before saving
-     user.setPassword(passwordEncoder.encode(user.getPassword()));
-     user.setRoles(Set.of("USER"));
+        if (user.getPassword().length() < 5) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Password must be at least 5 characters long");
+        }
 
+        if (user.getEmail() == null || user.getEmail().isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Email is required");
+        }
 
-//     if (user.getRoles() == null || user.getRoles().isEmpty()) {
-//         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Role must be provided");
-//     }
-//     if (!Arrays.asList("[USER]", "[ADMIN]").contains(user.getRoles())) {
-//         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid role");
-//     }
-     //Set<String> allowedRoles = Set.of("USER", "ADMIN");
+        // Encrypt password and assign role
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setRoles(Set.of("USER"));
 
-//     for (String role : user.getRoles()) {
-//         if (!allowedRoles.contains(role)) {
-//             throw new IllegalArgumentException("Only USER or ADMIN roles are allowed for registration.");
-//         }
-//     }
+        // Save user to DB
+        repo.save(user);
 
+        // ✅ HTML styled welcome email body
+        String subject = "🎉 Welcome to Taskify!";
+        String body = "<h2>Hi " + user.getUserName() + ",</h2>" +
+                "<p>Thank you for registering on <strong>Taskify</strong>!</p>" +
+                "<p>We're excited to have you on board.</p>" +
+                "<br/><p>🚀 Start managing your tasks like a pro!</p>" +
+                "<br/><p style='color:gray;'>– The Taskify Team</p>";
 
+        try {
+            emailService.sendEmail(user.getEmail(), subject, body);
+        } catch (Exception e) {
+            System.err.println("Email sending failed: " + e.getMessage());
+            // Optional: Log this error
+        }
 
-     // Save user
-     repo.save(user);
+        return ResponseEntity.ok("User registered successfully ");
+    }
 
-
-
-     return ResponseEntity.ok("User registered successfully");
- }
 
     public ResponseEntity<?> getUserByUserName(String userName) {
         Optional<User> user = repo.findByUserName(userName);

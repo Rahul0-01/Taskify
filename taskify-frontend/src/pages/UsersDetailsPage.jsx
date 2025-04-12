@@ -11,6 +11,7 @@ import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import getSmartSuggestion from '../utils/SmartSuggestion';
+import AutoCompleteInput from '../AutoCompleteInput'; 
 
 const BASE_URL = 'http://localhost:8080/api/task';
 
@@ -253,20 +254,19 @@ export default function UserDetailsPage() {
               </div>
 
               {/* Title */}
-              <input
-                placeholder="Title"
-                value={newTask.title}
-                onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
-                className="w-full p-2 bg-gray-700 rounded focus:outline-none"
-              />
+              <AutoCompleteInput
+  value={newTask.title}
+  onChange={(val) => setNewTask({ ...newTask, title: val })}
+  placeholder="Title"
+/>
 
               {/* Description */}
-              <textarea
-                placeholder="Description"
-                value={newTask.description}
-                onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
-                className="w-full p-2 bg-gray-700 rounded focus:outline-none"
-              />
+              <AutoCompleteInput
+  value={newTask.description}
+  onChange={(val) => setNewTask({ ...newTask, description: val })}
+  isTextArea={true}
+  placeholder="Description"
+/>
 
               {/* Due Date */}
               <input
@@ -369,18 +369,18 @@ export default function UserDetailsPage() {
                 </button>
               </div>
 
-              <input
-                placeholder="Title"
-                value={editTask.title}
-                onChange={(e) => setEditTask({ ...editTask, title: e.target.value })}
-                className="w-full p-2 bg-gray-700 rounded"
-              />
-              <textarea
-                placeholder="Description"
-                value={editTask.description}
-                onChange={(e) => setEditTask({ ...editTask, description: e.target.value })}
-                className="w-full p-2 bg-gray-700 rounded"
-              />
+              <AutoCompleteInput
+  value={editTask.title}
+  onChange={(val) => setEditTask({ ...editTask, title: val })}
+  placeholder="Title"
+
+/>
+         <AutoCompleteInput
+  value={editTask.description}
+  onChange={(val) => setEditTask({ ...editTask, description: val })}
+  isTextArea={true}
+  placeholder="Description"
+/>
               <input
                 type="date"
                 value={editTask.dueDate}

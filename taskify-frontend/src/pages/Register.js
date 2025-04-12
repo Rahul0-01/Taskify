@@ -5,23 +5,25 @@ import { motion } from 'framer-motion';
 
 const Register = () => {
   const [username, setUsername] = useState('');
+  const [email, setEmail] = useState(''); // ✅ added
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // Basic validation
     if (password !== confirmPassword) {
       alert('Passwords do not match!');
       return;
     }
+
     try {
       const response = await axios.post('http://localhost:8080/users/register', {
         userName: username,
         password: password,
+        email: email, // ✅ send email to backend
       });
-      alert('Registration successful! Please log in.');
+      alert('Registration successful! ');
       navigate('/login');
     } catch (error) {
       console.error('Registration error:', error);
@@ -46,6 +48,13 @@ const Register = () => {
             placeholder="Username"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
+            className="border border-gray-300 p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+          />
+          <input
+            type="email"
+            placeholder="Email" // ✅ email field
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             className="border border-gray-300 p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
           <input
