@@ -6,6 +6,7 @@ import { FaTasks, FaHourglassHalf, FaCheckCircle } from 'react-icons/fa';
 import { PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import YourPageWrapper from "../YourPageWrapper";
 
 const Dashboard = () => {
   const dispatch = useDispatch();
@@ -55,6 +56,7 @@ const Dashboard = () => {
   const recentTasks = taskList.slice(-5).reverse();
 
   return (
+    <YourPageWrapper>
     <div className="p-6 md:p-10">
       <h1 className="text-4xl font-bold text-center mb-10">Dashboard</h1>
 
@@ -160,6 +162,7 @@ const Dashboard = () => {
         ))}
       </div>
     </div>
+    </YourPageWrapper>
   );
 };
 
