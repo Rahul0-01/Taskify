@@ -10,6 +10,7 @@ import {
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import AutoCompleteInput from '../AutoCompleteInput'; 
+import YourPageWrapper from "../YourPageWrapper";
 
 
 // Framer Motion Variants
@@ -152,8 +153,9 @@ const TaskList = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#232526] to-[#414345] p-6">
-      <div className="max-w-7xl mx-auto space-y-8">
+    <YourPageWrapper>
+    <div className="min-h-screen bg-gradient-to-br from-[#232526] to-[#414345] dark:from-gray-900 dark:to-gray-800 p-6 text-white">
+     <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
         <motion.header
           variants={headerVariants}
@@ -442,6 +444,7 @@ const TaskList = () => {
         </AnimatePresence>
       </div>
     </div>
+    </YourPageWrapper>
   );
 };
 
