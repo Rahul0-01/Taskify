@@ -21,7 +21,7 @@ public class ReminderScheduler {
     private EmailService emailService;
 
     // Runs every day at 8 AM
-    @Scheduled(cron = "0 * * * * ?") // Every 1 minute (for testing only)
+    @Scheduled(cron = "0 * 8 * * ?") // Every 1 minute (for testing only)
 
     public void sendTaskReminders() {
         LocalDate today = LocalDate.now();

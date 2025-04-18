@@ -41,4 +41,8 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
 
     // Optional: if you still want to see who created what (for admin/audit views)
     List<Task> findAllByCreatedBy(User user);
+
+    List<Task> findByDueDateBetween(LocalDateTime startOfDay, LocalDateTime startOfNextDay);
+
+    List<Task> findByDueDateBetweenAndAssignedTo(LocalDateTime startOfDay, LocalDateTime startOfNextDay, User user);
 }
