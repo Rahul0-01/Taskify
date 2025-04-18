@@ -1,0 +1,15 @@
+[33m5003ea8[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m Backup before AI integration
+[33m422992b[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m Email notification added
+[33m73a8e7a[m Initial commit
+[33m00c93aa[m Admin panel added
+[33ma005b8b[m Task page working is done
+[33mb0cc7fa[m Before adding new attributes.Only Simple id , description,role etc
+[33m46aa7be[m Added frontend setup
+[33m74f9d8f[m Testing GitHub graph update
+[33m2811434[m Role based access
+[33m7353175[m Testing push
+[33mb6ebee6[m JWT authentication done
+[33m37dfbda[m authentication setup ..... no new user allowed to access random apis.
+[33m608b8a9[m User authentication with database validation: Verify login credentials against stored data, return user info on success, or show error on failure.
+[33mf1b21a3[m Today's task is all about to add different users. Till now its about to add users name password and role inside database
+[33mdb0e25a[m Initial commit

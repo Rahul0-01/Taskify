@@ -5,7 +5,7 @@ import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 import store from './store';
 import './index.css';
-// ✅ THIS LINE IS IMPORTANT!
+
 import ThemeProvider from './ThemeProvider.js';
 
 console.log("ThemeProvider is:", ThemeProvider);

@@ -11,6 +11,8 @@ import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import AutoCompleteInput from '../AutoCompleteInput'; 
 import YourPageWrapper from "../YourPageWrapper";
+import { fireConfetti } from "../utils/confetti";
+
 
 
 // Framer Motion Variants
@@ -63,7 +65,7 @@ const TaskList = () => {
     completed: false,
   });
 
-  // Fetch tasks on mount or when pagination/sort changes
+  // Fetch tasks on mount or when pagination/sort changes  
   useEffect(() => {
     dispatch(fetchTasks({ page, size, sortBy })).then((response) => {
       if (response.payload?.content?.length === 0 && page > 0) {
@@ -134,6 +136,7 @@ const TaskList = () => {
   // Mark a task as complete
   const handleCompleteTask = (id) => {
     dispatch(markTaskCompleted(id)).then(() => dispatch(fetchTasks({ page, size, sortBy })));
+    fireConfetti();
   };
 
   // Pagination

@@ -5,7 +5,6 @@ export const ThemeContext = createContext();
 
 
 
-console.log("ThemeProvider FILE loaded");
 
 
 const ThemeProvider = ({ children }) => {

@@ -1,46 +1,29 @@
-// src/App.js
-import React, { useContext } from 'react';
-import { Routes, Route } from 'react-router-dom';
-import Navbar from './components/Navbar';
-import Login from './pages/Login';
-import Home from './pages/Home';
-import Dashboard from './pages/Dashboard';
-import TaskList from './pages/TaskList';
-import TaskDetail from './pages/TaskDetail';
-import TaskDetail_1 from './pages/TaskDetail_1';
-import Register from './pages/Register';
+import { Routes, Route } from "react-router-dom";
+import Navbar from "./components/Navbar";
+import ThemeToggle from "./ThemeToggle";      
+import Login from "./pages/Login";
+import Home from "./pages/Home";
+import Dashboard from "./pages/Dashboard";
+import TaskList from "./pages/TaskList";
+import TaskDetail from "./pages/TaskDetail";
+import TaskDetail_1 from "./pages/TaskDetail_1";
+import Register from "./pages/Register";
 import AdminPage from './pages/AdminPage';
-import ProtectedRoute from './ProtectedRoute';
-import UserDetailsPage from './pages/UsersDetailsPage';
-import Taskforuser from './pages/Tasktemp';
+import ProtectedRoute from "./ProtectedRoute"; 
+import UserDetailsPage from "./pages/UsersDetailsPage";  
+import Taskforuser from "./pages/Tasktemp";
 import AutoCompleteInput from './AutoCompleteInput';
-import { ThemeContext } from './ThemeProvider';  // use the context you already have
-
-// Inline ThemeToggle to avoid import issues
-const ThemeToggleInline = () => {
-  const { theme, setTheme } = useContext(ThemeContext);
-  return (
-    <div className="p-4 flex justify-end space-x-2">
-      <button onClick={() => setTheme('light')}>
-        🌞 Light
-      </button>
-      <button onClick={() => setTheme('dark')}>
-        🌚 Dark
-      </button>
-      <button onClick={() => setTheme('system')}>
-        🖥️ Original
-      </button>
-    </div>
-  );
-};
+import AIChatAssistant from './components/AIChatAssistant';
 
 function App() {
   return (
     <>
       <Navbar />
 
-      {/* Inline theme toggle */}
-      <ThemeToggleInline />
+      {/* Theme toggle UI */}
+      <div className="p-4 flex justify-end">
+        <ThemeToggle />
+      </div>
 
       <Routes>
         <Route path="/login" element={<Login />} />
@@ -61,7 +44,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/admin"
           element={
@@ -70,7 +52,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/dashboard"
           element={
@@ -79,7 +60,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/task/:id"
           element={
@@ -88,7 +68,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/task_1/:id"
           element={
@@ -98,6 +77,8 @@ function App() {
           }
         />
       </Routes>
+
+      <AIChatAssistant />
     </>
   );
 }
