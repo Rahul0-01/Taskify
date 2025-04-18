@@ -12,9 +12,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
-
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
+import java.util.Collections;
 import java.util.List;
+
+
 
 @Service
 public class TaskService {
@@ -111,12 +115,29 @@ public class TaskService {
                 : repo.findByIdAndAssignedTo(id, user)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found for this user"));
 
-        task.setTitle(updatedTask.getTitle());
-        task.setDescription(updatedTask.getDescription());
-        task.setDueDate(updatedTask.getDueDate());
-        task.setPriority(updatedTask.getPriority());
-        task.setStatus(updatedTask.getStatus());
+        if (updatedTask.getTitle() != null) {
+            task.setTitle(updatedTask.getTitle());
+        }
+
+        if (updatedTask.getDescription() != null) {
+            task.setDescription(updatedTask.getDescription());
+        }
+
+        if (updatedTask.getDueDate() != null) {
+            task.setDueDate(updatedTask.getDueDate());
+        }
+
+        if (updatedTask.getPriority() != null) {
+            task.setPriority(updatedTask.getPriority());
+        }
+
+        if (updatedTask.getStatus() != null) {
+            task.setStatus(updatedTask.getStatus());
+        }
+
+        // Only update "completed" if explicitly passed (i.e., avoid default false if not included)
         task.setCompleted(updatedTask.isCompleted());
+
         task.setUpdatedAt(LocalDateTime.now());
         return repo.save(task);
     }
@@ -174,12 +195,34 @@ public class TaskService {
     /**
      * Get tasks by their due date.
      */
-    public List<Task> getTasksByDueDate(String dueDate) {
+    public List<Task> getTasksByDueDate(String dueDateString) {
+
         User user = AuthUtil.getCurrentUser(userRepo);
-        LocalDateTime due = LocalDateTime.parse(dueDate);
-        return isAdmin(user)
-                ? repo.findByDueDate(due)
-                : repo.findByDueDateAndAssignedTo(due, user);
+
+        try {
+            // Parse the input string "YYYY-MM-DD" into a LocalDate
+            LocalDate parsedDate = LocalDate.parse(dueDateString);
+
+            // Calculate the start and end of the day as LocalDateTime
+            LocalDateTime startOfDay = parsedDate.atStartOfDay(); // Inclusive start
+            LocalDateTime startOfNextDay = parsedDate.plusDays(1).atStartOfDay(); // Exclusive end
+
+               if (isAdmin(user)) {
+                return repo.findByDueDateBetween(startOfDay, startOfNextDay);
+            } else {
+                return repo.findByDueDateBetweenAndAssignedTo(startOfDay, startOfNextDay, user);
+            }
+
+        } catch (DateTimeParseException e) {
+            // Handle invalid date format string
+            System.err.println("Error parsing due date string: '" + dueDateString + "'. Format should be YYYY-MM-DD. " + e.getMessage());
+            return Collections.emptyList(); // Return empty list on parsing error
+        } catch (Exception e) {
+            // Catch unexpected errors
+            System.err.println("Error fetching tasks by due date '" + dueDateString + "': " + e.getMessage());
+            // Consider logging the stack trace: e.printStackTrace();
+            return Collections.emptyList();
+        }
     }
 
     /**
