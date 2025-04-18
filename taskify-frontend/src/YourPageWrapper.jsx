@@ -1,5 +1,6 @@
 import React, { useContext } from "react";
 import { ThemeContext } from "./ThemeProvider"; 
+import AIChatAssistant from './components/AIChatAssistant';
 
 
 
@@ -21,6 +22,7 @@ const YourPageWrapper = ({ children }) => {
       }`}
     >
       {children}
+      <AIChatAssistant />
     </div>
   );
 };
