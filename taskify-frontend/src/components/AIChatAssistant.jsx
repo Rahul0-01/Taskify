@@ -306,7 +306,7 @@ const AIChatAssistant = () => {
       return;
     }
     const textToSend = textOverride || input;
-    if (!textToSend.trim()) return;
+    if (!String(textToSend).trim()) return;
 
     const userMsg = { role: "user", content: textToSend };
     setIsLoading(true);
@@ -766,7 +766,8 @@ const AIChatAssistant = () => {
 
               {/* Send Button (Icon) */}
               <button
-                onClick={handleSend}
+              onClick={() => handleSend()}
+
                 disabled={!input.trim() || listening || isLoading || !genAI || !model}
                 className="bg-blue-600 hover:bg-blue-700 text-white rounded-full p-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-blue-400"
                 aria-label="Send message"
