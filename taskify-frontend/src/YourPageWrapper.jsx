@@ -1,6 +1,6 @@
 import React, { useContext } from "react";
 import { ThemeContext } from "./ThemeProvider"; 
-import AIChatAssistant from './components/AIChatAssistant';
+import AIChatAssistant from './components/AIChatAssistant.jsx';
 
 
 

@@ -196,6 +196,9 @@ export default function UserDetailsPage() {
             }}
           >
             <h3 className="text-2xl font-bold mb-2 text-cyan-300">{t.title}</h3>
+            <span className="inline-block bg-teal-600 text-white text-xs font-bold px-2 py-1 rounded mb-2">
+                ID: {t.id}
+              </span>
             <p className="text-sm text-gray-400 mb-1">
               <strong>Due:</strong> {t.dueDate ? new Date(t.dueDate).toLocaleDateString() : 'N/A'}
             </p>

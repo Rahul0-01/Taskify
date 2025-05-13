@@ -13,11 +13,13 @@ import ProtectedRoute from "./ProtectedRoute";
 import UserDetailsPage from "./pages/UsersDetailsPage";  
 import Taskforuser from "./pages/Tasktemp";
 import AutoCompleteInput from './AutoCompleteInput';
-import AIChatAssistant from './components/AIChatAssistant';
+import YourPageWrapper from "./YourPageWrapper"; 
+
 
 function App() {
   return (
     <>
+    <YourPageWrapper>
       <Navbar />
 
       {/* Theme toggle UI */}
@@ -78,7 +80,9 @@ function App() {
         />
       </Routes>
 
-      <AIChatAssistant />
+      </YourPageWrapper>
+
+
     </>
   );
 }
