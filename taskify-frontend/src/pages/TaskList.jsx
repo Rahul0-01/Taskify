@@ -12,6 +12,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import AutoCompleteInput from '../AutoCompleteInput'; 
 import YourPageWrapper from "../YourPageWrapper";
 import { fireConfetti } from "../utils/confetti";
+import { Calendar, Flag, CheckCircle } from 'lucide-react';
 
 
 
@@ -200,24 +201,52 @@ const TaskList = () => {
           </p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {taskList.map((task) => (
-              <motion.div
-                key={task.id}
-                variants={cardVariants}
-                initial="hidden"
-                animate="visible"
-                whileHover="hover"
-                className="backdrop-blur-md bg-white/5 border border-white/10 rounded-2xl p-6 shadow-xl transition-all duration-300 hover:shadow-teal-400/40"
-              >
-                <h3 className="text-xl font-semibold mb-2 text-white">
-                  {task.title}
-                </h3>
-                {/* <p className="text-gray-300 mb-2">{task.description}</p> */}
-                <p className="text-sm text-gray-400 mb-1">Priority: {task.priority}</p>
-                <p className="text-sm text-gray-400 mb-1">Status: {task.status}</p>
-                <p className="text-sm text-gray-400 mb-4">
-                  Due: {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'N/A'}
-                </p>
+          {taskList.map((task) => (
+            <motion.div
+              key={task.id}
+              variants={cardVariants}
+              initial="hidden"
+              animate="visible"
+              whileHover="hover"
+              className="backdrop-blur-md bg-white/5 border border-white/10 rounded-2xl p-6 shadow-xl transition-all duration-300 hover:shadow-teal-400/40"
+            >
+              {/* Task ID Badge */}
+              <span className="inline-block bg-teal-600 text-white text-xs font-bold px-2 py-1 rounded mb-2">
+                ID: {task.id}
+              </span>
+        
+              {/* Title */}
+              <h3 className="text-xl font-semibold mb-2 text-white">
+                {task.title}
+              </h3>
+        
+              {/* Priority */}
+              <p className={`text-sm font-medium mb-1 flex items-center gap-1 ${
+                task.priority === 'High'
+                  ? 'text-red-400'
+                  : task.priority === 'Medium'
+                  ? 'text-orange-300'
+                  : 'text-green-400'
+              }`}>
+                <Flag size={14} /> Priority: {task.priority}
+              </p>
+        
+              {/* Status */}
+              <p className={`text-sm font-medium mb-1 flex items-center gap-1 ${
+                task.status === 'Completed'
+                  ? 'text-green-400'
+                  : task.status === 'In Progress'
+                  ? 'text-yellow-400'
+                  : 'text-gray-400'
+              }`}>
+                <CheckCircle size={14} /> Status: {task.status}
+              </p>
+        
+              {/* Due Date */}
+              <p className="text-sm text-gray-300 mb-4 flex items-center gap-1">
+                <Calendar size={14} /> 
+                Due: {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'N/A'}
+              </p>
                 <div className="flex justify-between gap-2 mb-2">
                   <button
                     onClick={() => handleCompleteTask(task.id)}

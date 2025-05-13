@@ -239,6 +239,8 @@ const AIChatAssistant = () => {
   const [speechError, setSpeechError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const recognitionRef = useRef(null);
+  const wakeRecognitionRef = useRef(null);
+
   const chatScrollRef = useRef(null);
 
   useEffect(() => {
@@ -246,6 +248,48 @@ const AIChatAssistant = () => {
       chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight;
     }
   }, [messages]);
+
+    // 👂 Wake-word listener for "Hey Taskify"
+    useEffect(() => {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) return;
+  
+      wakeRecognitionRef.current = new SpeechRecognition();
+      const wakeRecog = wakeRecognitionRef.current;
+      wakeRecog.continuous = true;
+      wakeRecog.interimResults = false;
+      wakeRecog.lang = "en-US";
+  
+      wakeRecog.onresult = (event) => {
+        const transcript = event.results[event.results.length - 1][0].transcript.trim().toLowerCase();
+        if (transcript.includes("hey buddy")) {
+          setIsOpen(true);
+          startListening();
+        }
+      };
+  
+      wakeRecog.onerror = (e) => {
+        console.error("Wake-word error:", e.error);
+      };
+  
+      wakeRecog.start();
+  
+      return () => wakeRecog.stop();
+    }, []);
+
+    // ↻ Restart wake-word listener when chat closes
+// ↻ Restart wake-word listener when chat closes
+useEffect(() => {
+  if (!isOpen && wakeRecognitionRef.current) {
+    try {
+      wakeRecognitionRef.current.start();
+    } catch (err) {
+      console.warn("Wake recognition already started or failed:", err.message);
+    }
+  }
+}, [isOpen]);
+
+  
 
   // Helper: call Taskify backend with JWT and handle JSON or text responses
   const callTaskifyBackend = async (endpoint, method = "GET", body = null) => {
@@ -453,7 +497,7 @@ const AIChatAssistant = () => {
             }
 
             // Step 1: Fetch existing task
-            const existing = await callTaskifyBackend(`/getById/${id}`, "GET");
+            const existing = await callTaskifyBackend(`/getTask/${id}`, "GET");
             if (!existing.success || !existing.data) {
               userMsgResult = `❌ Error fetching task ${id}: ${existing.error}`;
               break;
@@ -640,7 +684,16 @@ const AIChatAssistant = () => {
           `}
           onClick={() => {
             if (!genAI || !model) return;
-            setIsOpen(!isOpen);
+               // If chat is _open_, we’re about to close it:
+              if (isOpen) {
+             stopListening();                  // stop chat mic
+               window.speechSynthesis.cancel();  // stop TTS
+              wakeRecognitionRef.current?.start(); // restart wake‑word
+             } else {
+               // Chat is _closed_, about to open manually:
+               wakeRecognitionRef.current?.stop();  // pause wake‑word
+             }
+             setIsOpen(!isOpen);
             if (isOpen) {
               stopListening(); // Stop listening if closing
               window.speechSynthesis.cancel(); // Stop speaking if closing
