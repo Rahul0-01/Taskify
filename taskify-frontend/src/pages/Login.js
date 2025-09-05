@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { UserIcon, LockClosedIcon, ArrowRightIcon, ExclamationCircleIcon } from '@heroicons/react/24/solid'; // Using solid icons
-
+import api from '../api';
 const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -15,17 +15,24 @@ const Login = () => {
     e.preventDefault();
     setError(''); // Clear previous errors
     setIsLoading(true); // Set loading state
+    console.log("API instance:", api);
+    
+
 
     try {
-      const response = await axios.post(
-        'http://localhost:8080/users/login',
-        { userName: username, userPassword: password },
-        { withCredentials: true }
-      );
-      const { token, roles } = response.data;
-      localStorage.setItem('token', token);
-      localStorage.setItem('roles', JSON.stringify(roles));
+     const response = await api.post('/users/login', {
+  userName: username,
+  userPassword: password,
+});
+  console.log("Login response =>", response.data); 
 
+     const { accessToken, refreshToken, roles } = response.data;
+
+  // 👇 correct keys save karo
+  localStorage.setItem("token", accessToken);
+  localStorage.setItem("refreshToken", refreshToken);
+  localStorage.setItem("roles", JSON.stringify(roles));
+  
       // Optional: Add a slight delay for visual feedback before navigating
       setTimeout(() => {
         navigate('/dashboard');

@@ -17,41 +17,68 @@ public class JwUtil {
     @Value("${jwt.secret}")
     private String SECRET_KEY;
 
+    @Value("${jwt.access.expiration}")
+    private long accessTokenExpiration;
 
-    // this is used to convert secret key in the format of base64.....
-    private  Key getSigningKey() {
+    @Value("${jwt.refresh.expiration}")
+    private long refreshTokenExpiration;
+
+    // Base64 decode secret
+    private Key getSigningKey() {
         byte[] keyBytes = Decoders.BASE64.decode(SECRET_KEY);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    // Generate Token
-    public  String generateToken(String username) {
+    // === Token generation ===
+    public String generateAccessToken(String username) {
+        return buildToken(username, accessTokenExpiration);
+    }
+
+    public String generateRefreshToken(String username) {
+        return buildToken(username, refreshTokenExpiration);
+    }
+
+    private String buildToken(String username, long expirationMillis) {
         return Jwts.builder()
                 .setSubject(username)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 10 * 60 * 60 * 1000)) // 10 hours
+                .setExpiration(new Date(System.currentTimeMillis() + expirationMillis))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    // Validate Token
+    // === Validation ===
     public boolean validateToken(String token, UserDetails userDetails) {
         return userDetails.getUsername().equals(extractClaim(token, Claims::getSubject))
-                && !extractClaim(token, Claims::getExpiration).before(new Date());
+                && !isTokenExpired(token);
+    }
+    public boolean validateToken(String token, String username) {
+        final String tokenUsername = extractUsername(token);
+        return (tokenUsername.equals(username) && !isTokenExpired(token));
     }
 
-    // Extract Claims
+    public String extractUsername(String token) {
+        return extractClaim(token, Claims::getSubject);
+    }
+
+    public Date extractExpiration(String token) {
+        return extractClaim(token, Claims::getExpiration);
+    }
+
+    public boolean isTokenExpired(String token) {
+        return extractExpiration(token).before(new Date());
+    }
+
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
         try {
             return claimsResolver.apply(
                     Jwts.parserBuilder()
-                            .setSigningKey(getSigningKey())  // ✅ FIXED
+                            .setSigningKey(getSigningKey())
                             .build()
                             .parseClaimsJws(token)
                             .getBody()
             );
         } catch (JwtException e) {
-
             throw new RuntimeException("Invalid JWT Token!");
         }
     }

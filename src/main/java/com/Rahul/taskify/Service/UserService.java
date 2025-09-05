@@ -92,37 +92,38 @@ public class UserService {
             User user = repo.findByUserName(loginRequest.getUserName())
                     .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-            System.out.println("DEBUG: User found in DB -> " + user.getUserName());
-            System.out.println("DEBUG: Encrypted Password from DB -> " + user.getPassword());
-            System.out.println("DEBUG: Password entered by user -> " + loginRequest.getUserPassword());
-
-            // Check if passwords match
+            // Check password
             if (!passwordEncoder.matches(loginRequest.getUserPassword(), user.getPassword())) {
-                System.out.println("DEBUG: Password mismatch for user -> " + loginRequest.getUserName());
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid password");
             }
 
             // Authenticate user
-            Authentication authentication = authenticationManager.authenticate(
+            authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(loginRequest.getUserName(), loginRequest.getUserPassword())
             );
 
-            System.out.println("DEBUG: User authenticated successfully -> " + loginRequest.getUserName());
+            // ✅ Generate both tokens
+            String accessToken = jwUtil.generateAccessToken(user.getUserName());
+            String refreshToken = jwUtil.generateRefreshToken(user.getUserName());
 
-            // Generate token
-            String token = jwUtil.generateToken(user.getUserName());
-
-            // Prepare JSON response
+            // ✅ Prepare JSON response
             Map<String, Object> responseMap = new HashMap<>();
-            responseMap.put("token", token);
+            responseMap.put("accessToken", accessToken);
+            responseMap.put("refreshToken", refreshToken);
             responseMap.put("roles", user.getRoles());
 
             return ResponseEntity.ok(responseMap);
+
         } catch (Exception e) {
-            System.out.println("DEBUG: Login failed for user -> " + loginRequest.getUserName() + " | Error: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password");
         }
     }
+
+    public User getUserEntityByUsername(String username) {
+        return repo.findByUserName(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+    }
+
 
     public ResponseEntity<?> getAllUsers() {
         return ResponseEntity.ok(repo.findAll());

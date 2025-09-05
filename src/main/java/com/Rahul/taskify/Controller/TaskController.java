@@ -53,8 +53,10 @@ public class TaskController {
 
         // Default behavior (assign to authenticated user inside service)
         return ResponseEntity.ok(service.createTask(task));
+
     }
     /**
+     * 
      * Retrieve all tasks.
      */
     @GetMapping("/getAllTask")

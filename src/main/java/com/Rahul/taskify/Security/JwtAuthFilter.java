@@ -34,6 +34,20 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
+        String path = request.getServletPath();
+
+        // ✅ Skip JWT check for public endpoints
+        if (path.startsWith("/users/login") ||
+                path.startsWith("/users/register") ||
+                path.startsWith("/users/refresh") ||
+                path.startsWith("/v3/api-docs") ||
+                path.startsWith("/swagger-ui")) {
+
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        // ✅ For all other requests, check token
         String token = extractToken(request);
         if (token != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             try {
@@ -47,6 +61,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
+
     private String extractToken(HttpServletRequest request) {
         String authHeader = request.getHeader("Authorization");
         return (authHeader != null && authHeader.startsWith("Bearer ")) ? authHeader.substring(7) : null;
@@ -55,6 +70,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     private void authenticateUser(String token, HttpServletRequest request) {
         String username = jwUtil.extractClaim(token, Claims::getSubject);
         UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+        System.out.println("Authorities from JWT: " + userDetails.getAuthorities());
+
 
         if (jwUtil.validateToken(token, userDetails)) {
             UsernamePasswordAuthenticationToken authentication =
@@ -63,5 +80,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }
+
     }
 }
