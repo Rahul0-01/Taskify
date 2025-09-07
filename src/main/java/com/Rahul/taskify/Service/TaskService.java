@@ -1,5 +1,8 @@
 package com.Rahul.taskify.Service;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import com.Rahul.taskify.Model.Task;
 import com.Rahul.taskify.Model.User;
@@ -12,13 +15,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.Collections;
 import java.util.List;
-
-
 
 @Service
 public class TaskService {
@@ -29,39 +31,39 @@ public class TaskService {
     @Autowired
     private UserRepository userRepo;
 
-    // Helper method: Checks whether the current user is an ADMIN.
+    // ----------------- Helper methods -----------------
+
     private boolean isAdmin(User user) {
         return user.getRoles().contains("ADMIN");
     }
 
-    /**
-     * Create a task for the current user.
-     */
+    // This method has been changed to public to be accessible by the caching proxy
+    public Long getCurrentUserId() {
+        return AuthUtil.getCurrentUser(userRepo).getId();
+    }
+
+    // ----------------- CRUD methods -----------------
+
+    @CachePut(value = "tasks", key = "#result.createdBy.id")
     public Task createTask(Task task) {
         User user = AuthUtil.getCurrentUser(userRepo);
         task.setCreatedBy(user);
-        task.setAssignedTo(user); // Assign to self
+        task.setAssignedTo(user);
         LocalDateTime now = LocalDateTime.now();
         task.setCreatedAt(now);
         task.setUpdatedAt(now);
         return repo.save(task);
     }
 
-    /**
-     * Overloaded method for creating a task for a target user.
-     * Only admins can use this method.
-     *
-     * Note:
-     * - createdBy remains the current (admin) user for audit/history.
-     * - assignedTo is set to the target user.
-     */
+    @CachePut(value = "tasks", key = "#result.assignedTo.id")
     public Task createTask(Task task, Long targetUserId) {
         User currentUser = AuthUtil.getCurrentUser(userRepo);
         task.setCreatedBy(currentUser);
 
         if (isAdmin(currentUser)) {
             if (targetUserId == null) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Target user ID is required when admin creates task for others");
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Target user ID is required when admin creates task for others");
             }
             User targetUser = userRepo.findById(targetUserId)
                     .orElseThrow(() -> new EntityNotFoundException("Assigned user not found with id: " + targetUserId));
@@ -75,26 +77,13 @@ public class TaskService {
         return repo.save(task);
     }
 
-    /**
-     * Retrieve all tasks assigned to the current user.
-     * Admins can use a different endpoint if needed.
-     */
+    @Cacheable(value = "tasks", key = "#root.target.getCurrentUserId()")
     public List<Task> getAllTask() {
         User user = AuthUtil.getCurrentUser(userRepo);
-
-        if (isAdmin(user)) {
-            return repo.findAll(); // Admin sees everything
-        } else {
-            return repo.findAllByAssignedTo(user); // Regular user sees only their assigned tasks
-        }
+        return isAdmin(user) ? repo.findAll() : repo.findAllByAssignedTo(user);
     }
 
-
-    /**
-     * Get a specific task by ID.
-     * - Admin: no filter.
-     * - Regular user: must be assigned to the user.
-     */
+    @Cacheable(value = "task", key = "#id")
     public Task getTaskById(long id) {
         User user = AuthUtil.getCurrentUser(userRepo);
         return isAdmin(user)
@@ -103,11 +92,8 @@ public class TaskService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found for this user"));
     }
 
-    /**
-     * Update a task.
-     * - Admin: can update any task.
-     * - Regular user: can only update tasks assigned to them.
-     */
+    @CachePut(value = "task", key = "#id")
+    @CacheEvict(value = "tasks", key = "#result.assignedTo.id", beforeInvocation = false)
     public Task updateTask(long id, Task updatedTask) {
         User user = AuthUtil.getCurrentUser(userRepo);
         Task task = isAdmin(user)
@@ -115,38 +101,17 @@ public class TaskService {
                 : repo.findByIdAndAssignedTo(id, user)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found for this user"));
 
-        if (updatedTask.getTitle() != null) {
-            task.setTitle(updatedTask.getTitle());
-        }
-
-        if (updatedTask.getDescription() != null) {
-            task.setDescription(updatedTask.getDescription());
-        }
-
-        if (updatedTask.getDueDate() != null) {
-            task.setDueDate(updatedTask.getDueDate());
-        }
-
-        if (updatedTask.getPriority() != null) {
-            task.setPriority(updatedTask.getPriority());
-        }
-
-        if (updatedTask.getStatus() != null) {
-            task.setStatus(updatedTask.getStatus());
-        }
-
-        // Only update "completed" if explicitly passed (i.e., avoid default false if not included)
+        if (updatedTask.getTitle() != null) task.setTitle(updatedTask.getTitle());
+        if (updatedTask.getDescription() != null) task.setDescription(updatedTask.getDescription());
+        if (updatedTask.getDueDate() != null) task.setDueDate(updatedTask.getDueDate());
+        if (updatedTask.getPriority() != null) task.setPriority(updatedTask.getPriority());
+        if (updatedTask.getStatus() != null) task.setStatus(updatedTask.getStatus());
         task.setCompleted(updatedTask.isCompleted());
-
         task.setUpdatedAt(LocalDateTime.now());
         return repo.save(task);
     }
 
-    /**
-     * Delete a task.
-     * - Admin: can delete any task.
-     * - Regular user: can delete only tasks assigned to them.
-     */
+    @CacheEvict(value = "task", key = "#id")
     public void deleteTask(long id) {
         User user = AuthUtil.getCurrentUser(userRepo);
         Task task = isAdmin(user)
@@ -156,9 +121,8 @@ public class TaskService {
         repo.delete(task);
     }
 
-    /**
-     * Update the status of a task.
-     */
+    @CachePut(value = "task", key = "#taskId")
+    @CacheEvict(value = "tasks", key = "#result.assignedTo.id", beforeInvocation = false)
     public Task updateTaskStatus(Long taskId, String status) {
         User user = AuthUtil.getCurrentUser(userRepo);
         Task task = isAdmin(user)
@@ -172,9 +136,7 @@ public class TaskService {
         return null;
     }
 
-    /**
-     * Get tasks by their status.
-     */
+    @Cacheable(value = "tasks", key = "#status + '-' + #root.target.getCurrentUserId()")
     public List<Task> getTasksByStatus(String status) {
         User user = AuthUtil.getCurrentUser(userRepo);
         return isAdmin(user)
@@ -182,9 +144,7 @@ public class TaskService {
                 : repo.findByStatusAndAssignedTo(status, user);
     }
 
-    /**
-     * Get tasks by their priority.
-     */
+    @Cacheable(value = "tasks", key = "#priority + '-' + #root.target.getCurrentUserId()")
     public List<Task> getTasksByPriority(String priority) {
         User user = AuthUtil.getCurrentUser(userRepo);
         return isAdmin(user)
@@ -192,43 +152,26 @@ public class TaskService {
                 : repo.findByPriorityAndAssignedTo(priority, user);
     }
 
-    /**
-     * Get tasks by their due date.
-     */
+    @Cacheable(value = "tasks", key = "#dueDateString + '-' + #root.target.getCurrentUserId()")
     public List<Task> getTasksByDueDate(String dueDateString) {
-
         User user = AuthUtil.getCurrentUser(userRepo);
-
         try {
-            // Parse the input string "YYYY-MM-DD" into a LocalDate
             LocalDate parsedDate = LocalDate.parse(dueDateString);
+            LocalDateTime startOfDay = parsedDate.atStartOfDay();
+            LocalDateTime startOfNextDay = parsedDate.plusDays(1).atStartOfDay();
 
-            // Calculate the start and end of the day as LocalDateTime
-            LocalDateTime startOfDay = parsedDate.atStartOfDay(); // Inclusive start
-            LocalDateTime startOfNextDay = parsedDate.plusDays(1).atStartOfDay(); // Exclusive end
-
-               if (isAdmin(user)) {
-                return repo.findByDueDateBetween(startOfDay, startOfNextDay);
-            } else {
-                return repo.findByDueDateBetweenAndAssignedTo(startOfDay, startOfNextDay, user);
-            }
+            return isAdmin(user)
+                    ? repo.findByDueDateBetween(startOfDay, startOfNextDay)
+                    : repo.findByDueDateBetweenAndAssignedTo(startOfDay, startOfNextDay, user);
 
         } catch (DateTimeParseException e) {
-            // Handle invalid date format string
-            System.err.println("Error parsing due date string: '" + dueDateString + "'. Format should be YYYY-MM-DD. " + e.getMessage());
-            return Collections.emptyList(); // Return empty list on parsing error
-        } catch (Exception e) {
-            // Catch unexpected errors
-            System.err.println("Error fetching tasks by due date '" + dueDateString + "': " + e.getMessage());
-            // Consider logging the stack trace: e.printStackTrace();
+            System.err.println("Error parsing due date: " + e.getMessage());
             return Collections.emptyList();
         }
     }
 
-    /**
-     * Assign a task to a user.
-     * Note: Only admin can assign a task to someone else.
-     */
+    @CachePut(value = "task", key = "#taskId")
+    @CacheEvict(value = "tasks", allEntries = true)
     public Task assignTaskToUser(long taskId, User targetUser) {
         User currentUser = AuthUtil.getCurrentUser(userRepo);
         Task task = isAdmin(currentUser)
@@ -239,20 +182,14 @@ public class TaskService {
         return repo.save(task);
     }
 
-    /**
-     * Get tasks assigned to a specific user.
-     */
+    @Cacheable(value = "tasks", key = "#userId")
     public List<Task> getTasksByUser(long userId) {
         User user = userRepo.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
         return repo.findAllByAssignedTo(user);
     }
 
-    /**
-     * Get tasks within a date range.
-     * - Admin: date range across all tasks.
-     * - Regular user: only tasks assigned to them.
-     */
+    @Cacheable(value = "tasks", key = "#startDate + '-' + #endDate + '-' + #root.target.getCurrentUserId()")
     public List<Task> getTasksByDateRange(String startDate, String endDate) {
         User user = AuthUtil.getCurrentUser(userRepo);
         LocalDateTime start = LocalDateTime.parse(startDate);
@@ -262,9 +199,8 @@ public class TaskService {
                 : repo.findByDateRangeAndAssignedTo(start, end, user);
     }
 
-    /**
-     * Mark a task as completed.
-     */
+    @CachePut(value = "task", key = "#taskId")
+    @CacheEvict(value = "tasks", key = "#result.assignedTo.id", beforeInvocation = false)
     public Task markTaskAsCompleted(long taskId) {
         User user = AuthUtil.getCurrentUser(userRepo);
         Task task = isAdmin(user)
@@ -275,18 +211,16 @@ public class TaskService {
         task.setStatus("Completed");
         task.setUpdatedAt(LocalDateTime.now());
         return repo.save(task);
-
     }
 
-    /**
-     * Get tasks with pagination filtering by assignment.
-     */
+    @Cacheable(value = "tasksPaged", key = "#pageable.pageNumber + '-' + #pageable.pageSize + '-' + #root.target.getCurrentUserId()")
     public Page<Task> getAllTaskPaged(Pageable pageable) {
         User user = AuthUtil.getCurrentUser(userRepo);
         return isAdmin(user) ? repo.findAll(pageable) : repo.findAllByAssignedTo(user, pageable);
     }
 
-    // The remaining helper methods (getPriorityValue, getStatusValue) are unchanged.
+    // ----------------- Priority/Status helpers -----------------
+
     private int getPriorityValue(String priority) {
         return switch (priority) {
             case "High" -> 1;

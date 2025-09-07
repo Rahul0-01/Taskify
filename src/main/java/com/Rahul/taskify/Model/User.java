@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
@@ -23,7 +24,7 @@ import java.util.Set;
         generator = ObjectIdGenerators.PropertyGenerator.class,
         property = "id"
 )
-public class User {
+public class User implements Serializable {
 
     //in this class u might see  @Schema(accessMode = Schema.AccessMode.READ_ONLY) this annotation . this
     // annotation is basically used for swagger ui . means if someone try to create/regiser user via swagger ui

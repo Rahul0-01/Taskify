@@ -12,8 +12,15 @@
 /build
 
 # misc
+
 .DS_Store
+# Environment files
+.env
 .env.local
+.env.production
+taskify-frontend/.env
+taskify-backend/.env
+
 .env.development.local
 .env.test.local
 .env.production.local
