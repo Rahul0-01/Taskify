@@ -8,7 +8,7 @@ import {
   markTaskCompleted,
 } from '../features/taskSlice';
 import { useParams } from 'react-router-dom';
-import axios from 'axios';
+import api from '../api';
 import { motion, AnimatePresence } from 'framer-motion';
 import getSmartSuggestion from '../utils/SmartSuggestion';
 import AutoCompleteInput from '../AutoCompleteInput'; 
@@ -65,9 +65,7 @@ export default function UserDetailsPage() {
   const fetchUserTasks = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${BASE_URL}/getByUser/${userid}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await api.get(`${BASE_URL}/getByUser/${userid}`);
       setTasks(res.data);
     } catch (err) {
       console.error(err);

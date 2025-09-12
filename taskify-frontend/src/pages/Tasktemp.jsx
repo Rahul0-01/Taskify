@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { deleteTask, markTaskCompleted, viewTask } from '../features/taskSlice';
 // Update path if needed
-import axios from 'axios';
+import api from '../api';
 
 const TaskForUser = () => {
   const { userid } = useParams();
@@ -18,9 +18,7 @@ const TaskForUser = () => {
   const fetchTasksForUser = async () => {
     const token = localStorage.getItem('token');
     try {
-      const res = await axios.get(`http://localhost:8080/api/task/getByUser/${userid}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await api.get(`/api/task/getByUser/${userid}`);
       setTasks(res.data);
     } catch (error) {
       console.error('Error fetching user tasks:', error);
@@ -38,12 +36,9 @@ const TaskForUser = () => {
   const handleToggleComplete = async (id, currentStatus) => {
     try {
       const token = localStorage.getItem('token');
-      await axios.put(
-        `http://localhost:8080/api/task/mark-complete/${id}?completed=${!currentStatus}`,
-        {},
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+      await api.put(
+        `/api/task/mark-complete/${id}?completed=${!currentStatus}`,
+        {}
       );
       fetchTasksForUser(); // refresh list
     } catch (error) {

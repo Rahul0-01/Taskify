@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { UserIcon, EnvelopeIcon, LockClosedIcon, CheckCircleIcon, ExclamationTriangleIcon, ArrowRightIcon } from '@heroicons/react/24/outline'; // Using outline icons for a lighter feel
@@ -37,7 +37,7 @@ const Register = () => {
     }
 
     try {
-      const response = await axios.post('http://localhost:8080/users/register', {
+      const response = await api.post('/users/register', {
         userName: username,
         password: password,
         email: email,

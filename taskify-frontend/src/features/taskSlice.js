@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
+import api from '../api';
 
 const BASE_URL = 'http://localhost:8080/api/task';
 
@@ -9,8 +9,7 @@ export const fetchTasks = createAsyncThunk(
   async ({ page, size, sortBy }, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${BASE_URL}/getAllTaskPaged`, {
-        headers: { ...(token && { Authorization: `Bearer ${token}` }) },
+      const response = await api.get(`${BASE_URL}/getAllTaskPaged`, {
         params: { page, size, sortBy },
       });
       return response.data; // Expected to be a paginated object with a "content" property
@@ -43,7 +42,7 @@ export const addTask = createAsyncThunk(
         ? `${BASE_URL}/create?userId=${userId}`
         : `${BASE_URL}/create`;
 
-      const response = await axios.post(url, task, { headers });
+      const response = await api.post(url, task, { headers });
       return response.data;
 
     } catch (error) {
@@ -57,10 +56,9 @@ export const updateTask = createAsyncThunk(
   async ({ id, updatedTask }, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.put(`${BASE_URL}/update/${id}`, updatedTask, {
+      const response = await api.put(`${BASE_URL}/update/${id}`, updatedTask, {
         headers: {
           'Content-Type': 'application/json',
-          ...(token && { Authorization: `Bearer ${token}` }),
         },
       });
       return response.data;
@@ -75,9 +73,7 @@ export const deleteTask = createAsyncThunk(
   async (id, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`${BASE_URL}/delete/${id}`, {
-        headers: { ...(token && { Authorization: `Bearer ${token}` }) },
-      });
+      await api.delete(`${BASE_URL}/delete/${id}`);
       return id;
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
@@ -90,9 +86,7 @@ export const viewTask = createAsyncThunk(
   async (id, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${BASE_URL}/getTask/${id}`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
+      const response = await api.get(`${BASE_URL}/getTask/${id}`);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
@@ -105,9 +99,7 @@ export const markTaskCompleted = createAsyncThunk(
   async (id, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.put(`${BASE_URL}/markAsCompleted/${id}`, null, {
-        headers: { ...(token && { Authorization: `Bearer ${token}` }) },
-      });
+      const response = await api.put(`${BASE_URL}/markAsCompleted/${id}`, null);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);

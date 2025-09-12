@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../api";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { UsersIcon, TrashIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline'; // Or solid
@@ -20,11 +20,7 @@ function AdminPage() {
         if (!token) {
            throw new Error("Authentication token not found.");
         }
-        const res = await axios.get("http://localhost:8080/users/allUsers", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const res = await api.get("/users/allUsers");
         console.log("Fetched users:", res.data);
         // Ensure we are setting an array, provide fallback
         setUsers(Array.isArray(res.data.body) ? res.data.body : []);
@@ -72,11 +68,7 @@ function AdminPage() {
       if (!token) {
         throw new Error("Authentication token not found.");
       }
-      await axios.delete(`http://localhost:8080/users/DeleteUser/${userId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      await api.delete(`/users/DeleteUser/${userId}`);
       // alert("User deleted successfully!"); // Replace alert with optimistic UI update
       setUsers(currentUsers => currentUsers.filter((user) => user.id !== userId));
     } catch (err) {
