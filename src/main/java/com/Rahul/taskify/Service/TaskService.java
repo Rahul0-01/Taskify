@@ -44,18 +44,22 @@ public class TaskService {
 
     // ----------------- CRUD methods -----------------
 
-    @CachePut(value = "tasks", key = "#result.createdBy.id")
+    // Create task for the logged-in user
+    @CachePut(value = "tasks", key = "#result.assignedTo.id")
+    @CacheEvict(value = "tasksPaged", allEntries = true)
     public Task createTask(Task task) {
-        User user = AuthUtil.getCurrentUser(userRepo);
-        task.setCreatedBy(user);
-        task.setAssignedTo(user);
+        User currentUser = AuthUtil.getCurrentUser(userRepo);
+        task.setCreatedBy(currentUser);
+        task.setAssignedTo(currentUser);
         LocalDateTime now = LocalDateTime.now();
         task.setCreatedAt(now);
         task.setUpdatedAt(now);
         return repo.save(task);
     }
 
+    // Create task for another user (used when admin provides userId OR assignedTo.id)
     @CachePut(value = "tasks", key = "#result.assignedTo.id")
+    @CacheEvict(value = "tasksPaged", allEntries = true)
     public Task createTask(Task task, Long targetUserId) {
         User currentUser = AuthUtil.getCurrentUser(userRepo);
         task.setCreatedBy(currentUser);
@@ -63,19 +67,22 @@ public class TaskService {
         if (isAdmin(currentUser)) {
             if (targetUserId == null) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                        "Target user ID is required when admin creates task for others");
+                        "Target user ID is required when admin creates a task for others");
             }
             User targetUser = userRepo.findById(targetUserId)
                     .orElseThrow(() -> new EntityNotFoundException("Assigned user not found with id: " + targetUserId));
             task.setAssignedTo(targetUser);
         } else {
+            // Non-admins can only assign tasks to themselves
             task.setAssignedTo(currentUser);
         }
 
-        task.setCreatedAt(LocalDateTime.now());
-        task.setUpdatedAt(LocalDateTime.now());
+        LocalDateTime now = LocalDateTime.now();
+        task.setCreatedAt(now);
+        task.setUpdatedAt(now);
         return repo.save(task);
     }
+
 
     @Cacheable(value = "tasks", key = "#root.target.getCurrentUserId()")
     public List<Task> getAllTask() {
