@@ -61,6 +61,7 @@ public class UserConfiguration implements WebMvcConfigurer {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/tts/generate").permitAll()
                         .requestMatchers("/users/register", "/users/login").permitAll()
+                        .requestMatchers("/users/refresh").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/users/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()

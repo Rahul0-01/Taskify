@@ -18,17 +18,17 @@ const Login = () => {
     console.log("API instance:", api);
     
 
-
     try {
      const response = await api.post('/users/login', {
   userName: username,
   userPassword: password,
 });
-  console.log("Login response =>", response.data); 
+ console.log("Login response =>", response.data); 
 
      const { accessToken, refreshToken, roles } = response.data;
 
-  // 👇 correct keys save karo
+  // �� correct keys save karo
+  localStorage.setItem("accessToken", accessToken);
   localStorage.setItem("token", accessToken);
   localStorage.setItem("refreshToken", refreshToken);
   localStorage.setItem("roles", JSON.stringify(roles));

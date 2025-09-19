@@ -36,7 +36,7 @@ api.interceptors.response.use(
     }
 
     // Only attempt refresh on 401 Unauthorized
-    if (error.response?.status === 401) {
+    if (error.response?.status === 401 || error.response?.status === 403) {
       originalRequest._retry = true;
       try {
         const refreshToken = localStorage.getItem("refreshToken");
@@ -62,14 +62,10 @@ api.interceptors.response.use(
 
         return api(originalRequest);
       } catch (refreshError) {
-        // final fallback — clear tokens and redirect to login
+        // final fallback — clear tokens but let ProtectedRoute handle redirect
         localStorage.removeItem("accessToken");
         localStorage.removeItem("token");
         localStorage.removeItem("refreshToken");
-        // Optional: do not force navigate on library environment; front-end should handle redirect
-        if (typeof window !== "undefined") {
-          window.location.href = "/login";
-        }
         return Promise.reject(refreshError);
       }
     }

@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Bot, X, Mic, SendHorizonal, VolumeX } from 'lucide-react';
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
 import { parseDate } from "chrono-node";
+import api from '../api';
 
 // --- Google AI API Key and SDK Initialization ---
 const googleAiApiKey = process.env.REACT_APP_GOOGLE_AI_API_KEY;
@@ -232,7 +233,7 @@ if (googleAiApiKey) {
 const AIChatAssistant = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
-    { role: "ai", content: "Hi! I’m Taskify Assistant. How can I help you manage tasks?" },
+    { role: "ai", content: "Hi! I'm Taskify Assistant. How can I help you manage tasks?" },
   ]);
   const [input, setInput] = useState("");
   const [listening, setListening] = useState(false);
@@ -291,49 +292,22 @@ useEffect(() => {
 
   
 
-  // Helper: call Taskify backend with JWT and handle JSON or text responses
+  // Helper: call Taskify backend with axios (interceptors handle refresh)
   const callTaskifyBackend = async (endpoint, method = "GET", body = null) => {
     if (!TASKIFY_BACKEND_URL) {
       return { success: false, error: "Backend URL not configured." };
     }
-    const token = localStorage.getItem("token");
     try {
-      const options = {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-      };
-      if (body && ["POST", "PUT", "PATCH"].includes(method)) {
-        options.body = JSON.stringify(body);
-      }
-
-      const res = await fetch(`${TASKIFY_BACKEND_URL}${endpoint}`, options);
-      if (!res.ok) {
-        let errText = await res.text();
-        let errBody;
-        try {
-          errBody = JSON.parse(errText);
-        } catch {
-          errBody = errText;
-        }
-        const msg = errBody?.message || errBody || res.statusText;
-        throw new Error(`Backend Error (${res.status}): ${msg}`);
-      }
-
-      if (res.status === 204) {
-        return { success: true, data: null };
-      }
-
-      const ct = res.headers.get("content-type") || "";
-      let data;
-      if (ct.includes("application/json")) {
-        data = await res.json();
+      const url = `${TASKIFY_BACKEND_URL}${endpoint}`;
+      const config = { headers: { "Content-Type": "application/json" } };
+      let res;
+      if (method === "GET" || method === "DELETE") {
+        res = await api[method.toLowerCase()](url, config);
       } else {
-        data = await res.text();
+        res = await api[method.toLowerCase()](url, body, config);
       }
-      return { success: true, data };
+      if (res.status === 204) return { success: true, data: null };
+      return { success: true, data: res.data };
     } catch (e) {
       console.error(`Error calling ${endpoint}:`, e);
       return { success: false, error: e.message };
@@ -372,7 +346,7 @@ useEffect(() => {
 
       if (fc) {
         const { name, args = {} } = fc;
-        setMessages((prev) => [...prev, { role: "ai", content: `🧠 Okay, performing: ${name}...` }]);
+        setMessages((prev) => [...prev, { role: "ai", content: `�� Okay, performing: ${name}...` }]);
         let userMsgResult = "";
 
         switch (name) {
@@ -684,7 +658,7 @@ useEffect(() => {
           `}
           onClick={() => {
             if (!genAI || !model) return;
-               // If chat is _open_, we’re about to close it:
+               // If chat is _open_, we're about to close it:
               if (isOpen) {
              stopListening();                  // stop chat mic
                window.speechSynthesis.cancel();  // stop TTS

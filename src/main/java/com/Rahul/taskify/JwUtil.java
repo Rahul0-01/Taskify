@@ -23,7 +23,7 @@ public class JwUtil {
     @Value("${jwt.refresh.expiration}")
     private long refreshTokenExpiration;
 
-    // Base64 decode secret
+    // === Signing Key ===
     private Key getSigningKey() {
         byte[] keyBytes = Decoders.BASE64.decode(SECRET_KEY);
         return Keys.hmacShaKeyFor(keyBytes);
@@ -49,26 +49,33 @@ public class JwUtil {
 
     // === Validation ===
     public boolean validateToken(String token, UserDetails userDetails) {
-        return userDetails.getUsername().equals(extractClaim(token, Claims::getSubject))
+        return userDetails.getUsername().equals(extractClaimSafely(token, Claims::getSubject))
                 && !isTokenExpired(token);
     }
+
     public boolean validateToken(String token, String username) {
-        final String tokenUsername = extractUsername(token);
+        final String tokenUsername = extractClaimSafely(token, Claims::getSubject);
         return (tokenUsername.equals(username) && !isTokenExpired(token));
     }
 
     public String extractUsername(String token) {
-        return extractClaim(token, Claims::getSubject);
+        return extractClaimSafely(token, Claims::getSubject);
     }
 
     public Date extractExpiration(String token) {
-        return extractClaim(token, Claims::getExpiration);
+        return extractClaimSafely(token, Claims::getExpiration);
     }
 
     public boolean isTokenExpired(String token) {
-        return extractExpiration(token).before(new Date());
+        try {
+            return extractExpiration(token).before(new Date());
+        } catch (Exception e) {
+            // If we can't extract expiration, consider it expired
+            return true;
+        }
     }
 
+    // === Claims extraction ===
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
         try {
             return claimsResolver.apply(
@@ -78,6 +85,24 @@ public class JwUtil {
                             .parseClaimsJws(token)
                             .getBody()
             );
+        } catch (JwtException e) {
+            throw new RuntimeException("Invalid JWT Token!");
+        }
+    }
+
+    // Safe extraction that doesn’t throw on expired tokens
+    public <T> T extractClaimSafely(String token, Function<Claims, T> claimsResolver) {
+        try {
+            return claimsResolver.apply(
+                    Jwts.parserBuilder()
+                            .setSigningKey(getSigningKey())
+                            .build()
+                            .parseClaimsJws(token)
+                            .getBody()
+            );
+        } catch (ExpiredJwtException e) {
+            // ✅ Still return claims even if expired
+            return claimsResolver.apply(e.getClaims());
         } catch (JwtException e) {
             throw new RuntimeException("Invalid JWT Token!");
         }

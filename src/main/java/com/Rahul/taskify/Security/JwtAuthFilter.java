@@ -68,18 +68,30 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     }
 
     private void authenticateUser(String token, HttpServletRequest request) {
-        String username = jwUtil.extractClaim(token, Claims::getSubject);
-        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-        System.out.println("Authorities from JWT: " + userDetails.getAuthorities());
+        try {
+            // Use safe extraction to handle expired tokens
+            String username = jwUtil.extractClaimSafely(token, Claims::getSubject);
+            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+            System.out.println("Authorities from JWT: " + userDetails.getAuthorities());
 
+            // Check if token is expired
+            if (jwUtil.isTokenExpired(token)) {
+                // Token is expired - let the request continue so frontend can handle 401
+                // Don't set authentication, which will result in 401 response
+                return;
+            }
 
-        if (jwUtil.validateToken(token, userDetails)) {
-            UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+            if (jwUtil.validateToken(token, userDetails)) {
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
 
-            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
+        } catch (Exception e) {
+            // For any other JWT parsing errors, let the request continue
+            // This will result in 401 response that frontend can handle
+            System.out.println("JWT parsing error: " + e.getMessage());
         }
-
     }
 }
