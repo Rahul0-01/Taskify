@@ -3,12 +3,14 @@ package com.Rahul.taskify.Service;
 import com.Rahul.taskify.Model.Task;
 import com.Rahul.taskify.Model.User;
 import com.Rahul.taskify.Repository.TaskRepository;
-import jakarta.mail.MessagingException;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
+import com.Rahul.taskify.dto.ReminderMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -22,9 +24,15 @@ public class ReminderScheduler {
     private TaskRepository taskRepository;
 
     @Autowired
-    private EmailService emailService;
+    private RabbitTemplate rabbitTemplate;
 
-    // Runs every day at 8 AM IST (configurable via application.properties)
+    @Value("${rabbitmq.reminder.exchange}")
+    private String reminderExchange;
+
+    @Value("${rabbitmq.reminder.routing-key}")
+    private String reminderRoutingKey;
+
+    // Runs every day at 8 AM IST
     @Scheduled(cron = "${reminder.cron}", zone = "${reminder.zone}")
     public void sendTaskReminders() {
         LocalDate today = LocalDate.now();
@@ -39,20 +47,19 @@ public class ReminderScheduler {
             if (dueDate.isEqual(today) || dueDate.isEqual(tomorrow)) {
                 User assignedUser = task.getAssignedTo();
                 if (assignedUser != null && assignedUser.getEmail() != null) {
-                    String subject = "⏰ Task Due Reminder: " + task.getTitle();
-                    String body = "Hello " + assignedUser.getUserName() + ",\n\n" +
-                            "This is a reminder that your task:\n\n" +
-                            "📌 **" + task.getTitle() + "**\n" +
-                            "🗓 Due Date: " + dueDate + "\n\n" +
-                            "Please make sure to complete it on time.\n\n" +
-                            "Regards,\nTaskify Bot 🤖";
 
-                    try {
-                        emailService.sendEmail(assignedUser.getEmail(), subject, body);
-                        log.info("✅ Reminder sent for task ID: {}", task.getId());
-                    } catch (MessagingException e) {
-                        log.error("❌ Failed to send email for task ID: {}", task.getId(), e);
-                    }
+                    // ✅ Include taskId in the message now
+                    ReminderMessage message = new ReminderMessage(
+                            task.getId(),
+                            assignedUser.getEmail(),
+                            assignedUser.getUserName(),
+                            task.getTitle(),
+                            dueDate.toString()
+                    );
+
+                    // Publish to RabbitMQ
+                    rabbitTemplate.convertAndSend(reminderExchange, reminderRoutingKey, message);
+                    log.info("📤 Reminder enqueued for task ID: {}", task.getId());
                 }
             }
         }
