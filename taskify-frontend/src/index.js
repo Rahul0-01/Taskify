@@ -8,7 +8,7 @@ import './index.css';
 
 import ThemeProvider from './ThemeProvider.js';
 
-console.log("ThemeProvider is:", ThemeProvider);
+
 
 
 

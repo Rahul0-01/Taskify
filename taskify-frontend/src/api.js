@@ -2,8 +2,8 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://localhost:8080", // backend base URL
-  withCredentials: true,
+   baseURL: process.env.REACT_APP_TASKIFY_BACKEND_URL,
+  withCredentials: false,
 });
 
 // Request interceptor: attach access token (supports both "accessToken" and legacy "token")
@@ -43,7 +43,10 @@ api.interceptors.response.use(
         if (!refreshToken) throw new Error("No refresh token found");
 
         // Use axios (not api) to avoid recursion on this call
-        const res = await axios.post("http://localhost:8080/users/refresh", { refreshToken });
+        const res = await axios.post(
+  `${process.env.REACT_APP_TASKIFY_BACKEND_URL}/users/refresh`,
+  { refreshToken }
+);
 
         // The backend may return { accessToken, refreshToken } or { token, refreshToken } — handle both
         const newAccess = res.data?.accessToken || res.data?.token;

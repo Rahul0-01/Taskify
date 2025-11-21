@@ -13,7 +13,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import getSmartSuggestion from '../utils/SmartSuggestion';
 import AutoCompleteInput from '../AutoCompleteInput'; 
 
-const BASE_URL = 'http://localhost:8080/api/task';
+const BASE_URL = `${process.env.REACT_APP_TASKIFY_BACKEND_URL}/api/task`;
+
 
 const headerVariants = {
   hidden: { opacity: 0, y: -20 },

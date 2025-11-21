@@ -1,14 +1,13 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../api';
 
-const BASE_URL = 'http://localhost:8080/api/task';
+const BASE_URL = process.env.REACT_APP_TASKIFY_BACKEND_URL + '/api/task';
 
 // Async actions
 export const fetchTasks = createAsyncThunk(
   'tasks/fetchTasks',
   async ({ page, size, sortBy }, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem('token');
       const response = await api.get(`${BASE_URL}/getAllTaskPaged`, {
         params: { page, size, sortBy },
       });
@@ -23,17 +22,6 @@ export const addTask = createAsyncThunk(
   'tasks/addTask',
   async (payload, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem('token');
-
-      if (!token) {
-        return rejectWithValue("Authentication token is missing.");
-      }
-
-      const headers = {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      };
-
       // Backward compatibility: if payload has a `task`, use that; otherwise treat it as the task object directly
       const task = payload.task || payload;
       const userId = payload.userId;
@@ -42,7 +30,7 @@ export const addTask = createAsyncThunk(
         ? `${BASE_URL}/create?userId=${userId}`
         : `${BASE_URL}/create`;
 
-      const response = await api.post(url, task, { headers });
+      const response = await api.post(url, task);
       return response.data;
 
     } catch (error) {
@@ -55,12 +43,7 @@ export const updateTask = createAsyncThunk(
   'tasks/updateTask',
   async ({ id, updatedTask }, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await api.put(`${BASE_URL}/update/${id}`, updatedTask, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      const response = await api.put(`${BASE_URL}/update/${id}`, updatedTask);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
@@ -72,7 +55,6 @@ export const deleteTask = createAsyncThunk(
   'tasks/deleteTask',
   async (id, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem('token');
       await api.delete(`${BASE_URL}/delete/${id}`);
       return id;
     } catch (error) {
@@ -85,7 +67,6 @@ export const viewTask = createAsyncThunk(
   'tasks/viewTask',
   async (id, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem('token');
       const response = await api.get(`${BASE_URL}/getTask/${id}`);
       return response.data;
     } catch (error) {
@@ -98,7 +79,6 @@ export const markTaskCompleted = createAsyncThunk(
   'tasks/markCompleted',
   async (id, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem('token');
       const response = await api.put(`${BASE_URL}/markAsCompleted/${id}`, null);
       return response.data;
     } catch (error) {
@@ -113,7 +93,13 @@ const taskSlice = createSlice({
   initialState: {
     // We store a paginated response object in "tasks"
     // Example structure: { content: [ ... ], totalElements: 0, totalPages: 0, size: 6, number: 0 }
-    tasks: {},
+    tasks: {
+      content: [],
+      totalElements: 0,
+      totalPages: 0,
+      number: 0,
+      size: 6
+    },
     currentTask: null,
     loading: false,
     error: null,
@@ -124,10 +110,11 @@ const taskSlice = createSlice({
       // Fetch tasks
       .addCase(fetchTasks.pending, (state) => {
         state.loading = true;
+        state.error = null;
       })
       .addCase(fetchTasks.fulfilled, (state, action) => {
         state.loading = false;
-        state.tasks = action.payload;
+        state.tasks = action.payload || { content: [] };
       })
       .addCase(fetchTasks.rejected, (state, action) => {
         state.loading = false;
@@ -136,16 +123,8 @@ const taskSlice = createSlice({
       // Add task
       .addCase(addTask.fulfilled, (state, action) => {
         if (state.tasks && Array.isArray(state.tasks.content)) {
-          state.tasks.content.push(action.payload);
+          state.tasks.content.unshift(action.payload); // Add to top
           state.tasks.totalElements = (state.tasks.totalElements || 0) + 1;
-        } else {
-          state.tasks = {
-            content: [action.payload],
-            totalElements: 1,
-            totalPages: 1,
-            number: 0,
-            size: 6,
-          };
         }
       })
       // Update task
@@ -155,6 +134,9 @@ const taskSlice = createSlice({
             task.id === action.payload.id ? action.payload : task
           );
         }
+        if (state.currentTask && state.currentTask.id === action.payload.id) {
+          state.currentTask = action.payload;
+        }
       })
       // Delete task
       .addCase(deleteTask.fulfilled, (state, action) => {
@@ -162,7 +144,10 @@ const taskSlice = createSlice({
           state.tasks.content = state.tasks.content.filter(
             (task) => task.id !== action.payload
           );
-          state.tasks.totalElements = (state.tasks.totalElements || 1) - 1;
+          state.tasks.totalElements = Math.max((state.tasks.totalElements || 1) - 1, 0);
+        }
+        if (state.currentTask && state.currentTask.id === action.payload) {
+          state.currentTask = null;
         }
       })
       // Mark task as completed
@@ -172,10 +157,14 @@ const taskSlice = createSlice({
             task.id === action.payload.id ? action.payload : task
           );
         }
+        if (state.currentTask && state.currentTask.id === action.payload.id) {
+          state.currentTask = action.payload;
+        }
       })
       // View single task
       .addCase(viewTask.pending, (state) => {
         state.loading = true;
+        state.error = null;
       })
       .addCase(viewTask.fulfilled, (state, action) => {
         state.loading = false;
