@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 // --- No need for AuthenticationManager imports here unless defining a bean ---
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 // import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity; // Keeping this commented out based on previous attempts
@@ -52,19 +53,18 @@ public class UserConfiguration implements WebMvcConfigurer {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthFilter jwtAuthFilter) throws Exception {
-        // Your existing SecurityFilterChain bean - Stays exactly the same
-        http
-                .csrf(csrf -> csrf
 
-                        .disable())
+        http
+                .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/tts/generate").permitAll()
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()      // <-- FIX
+                        .requestMatchers(HttpMethod.POST, "/api/tts/generate").permitAll()
                         .requestMatchers("/users/register", "/users/login").permitAll()
                         .requestMatchers("/users/refresh").permitAll()
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/users/**").hasAnyRole("USER", "ADMIN")
-                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .anyRequest().authenticated()
                 )
                 .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable()))
@@ -72,6 +72,5 @@ public class UserConfiguration implements WebMvcConfigurer {
 
         return http.build();
     }
-    // ========= End of your existing Security beans =========
 
 } // End of class

@@ -1,0 +1,5 @@
+# this file is just alternative way so that maven run locally instead of docker as we are doing in other docker fiel . so this one is for deveolpment only when we will be dping ci cd we will use the mulit level docker file.
+FROM eclipse-temurin:17-jre-jammy
+WORKDIR /app
+COPY target/*.jar app.jar
+ENTRYPOINT ["java", "-jar", "app.jar"]

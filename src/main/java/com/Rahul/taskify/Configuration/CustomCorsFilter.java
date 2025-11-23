@@ -1,12 +1,9 @@
 package com.Rahul.taskify.Configuration;
 
-import jakarta.servlet.Filter;
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.ServletRequest;
-import jakarta.servlet.ServletResponse;
+import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -15,6 +12,12 @@ import java.io.IOException;
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class CustomCorsFilter implements Filter {
+
+    @Value("${app.env:prod}")
+    private String env;
+
+    private static final String LOCALHOST_ORIGIN = "http://localhost:3000";
+
     @Override
     public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain)
             throws IOException, ServletException {
@@ -22,14 +25,30 @@ public class CustomCorsFilter implements Filter {
         HttpServletRequest request = (HttpServletRequest) req;
         HttpServletResponse response = (HttpServletResponse) res;
 
-        // Set CORS headers
-        response.setHeader("Access-Control-Allow-Origin", "http://localhost:3000");
-        response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-        response.setHeader("Access-Control-Allow-Headers", "authorization, content-type, xsrf-token");
-        response.setHeader("Access-Control-Allow-Credentials", "true");
-        response.setHeader("Access-Control-Max-Age", "3600");
+        // --------------------------------------------------------------------
+        // 🔥 IN PRODUCTION (app.env = prod)
+        // Do NOT set ANY CORS headers here. API Gateway handles ALL CORS.
+        // --------------------------------------------------------------------
+        if (!"local".equals(env)) {
+            chain.doFilter(req, res);
+            return;
+        }
 
-        // For OPTIONS requests, return OK immediately
+        // --------------------------------------------------------------------
+        // 🔥 IN LOCAL MODE (app.env = local)
+        // Backend needs to set CORS headers for localhost frontend only.
+        // --------------------------------------------------------------------
+        String origin = request.getHeader("Origin");
+
+        if (LOCALHOST_ORIGIN.equals(origin)) {
+            response.setHeader("Access-Control-Allow-Origin", origin);
+        }
+
+        response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+        response.setHeader("Access-Control-Allow-Headers", "authorization, content-type");
+        response.setHeader("Access-Control-Allow-Credentials", "true");
+
+        // Handle preflight
         if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
             response.setStatus(HttpServletResponse.SC_OK);
             return;

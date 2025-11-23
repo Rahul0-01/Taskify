@@ -22,7 +22,7 @@ import com.Rahul.taskify.dto.TtsRequest;
 
 @RestController
 @RequestMapping("/api/tts")
-@CrossOrigin(origins = {"http://localhost:3000", "https://your-deployed-frontend.com"}) // Adjust as needed
+@CrossOrigin(origins = {"http://localhost:3000", "http://taskify-frontend-rahul.s3-website.eu-north-1.amazonaws.com"}) // Adjust as needed
 public class TtsController {
 
     private static final Logger log = LoggerFactory.getLogger(TtsController.class);

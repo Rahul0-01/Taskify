@@ -1,0 +1,42 @@
+
+
+[
+  {
+    "name": "taskify-backend",
+    "image": "121568408609.dkr.ecr.eu-north-1.amazonaws.com/taskify-backend:latest",
+    "essential": true,
+    "portMappings": [
+      { "containerPort": 8080, "hostPort": 8080 }
+    ],
+    "environment": [
+      {
+        "name": "SPRING_DATASOURCE_URL",
+        "value": "jdbc:mysql://<taskify-db.cfq22k8420w9.eu-north-1.rds.amazonaws.com>:3306/taskify_db"
+      },
+      { "name": "SPRING_DATASOURCE_USERNAME", "value": "admin" },
+      { "name": "SPRING_DATASOURCE_PASSWORD", "value": "taskify123" },
+      {
+        "name": "JWT_SECRET",
+        "value": "QmVzdFNlY3JldEtleUZvckpXVC0yMDI1LkdlbnVyYXRlZC1ieS1DaGF0R1BU"
+      },
+      { "name": "SPRING_MAIL_USERNAME", "value": "rahulchauhan95186@gmail.com" },
+      { "name": "SPRING_MAIL_PASSWORD", "value": "rvda nbcq gjni tbgc" },
+      { "name": "ELEVEN_API_KEY", "value": "sk_fdd5fa2741564900d0a1620a8b21876684dd9b812ffdd154" },
+      { "name": "ELEVEN_VOICE_ID", "value": "21m00Tcm4TlvDq8ikWAM" },
+      { "name": "app.env", "value": "prod" },
+      { "name": "SPRING_ACTIVE_PROFILE", "value": "prod" }
+    ],
+    "cpu": 256,
+    "memory": 512,
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-group": "/ecs/taskify-backend-task",
+        "awslogs-region": "eu-north-1",
+        "awslogs-stream-prefix": "ecs"
+      }
+    }
+  }
+]
+
+
