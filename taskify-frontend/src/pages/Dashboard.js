@@ -22,6 +22,9 @@ const Dashboard = () => {
 
   console.log("Redux tasks =>", tasks);
 
+  console.log("Redeploy");
+
+
   // Display loading or error messages
   if (loading)
     return (
