@@ -1,0 +1,41 @@
+name: CI/CD - Deploy Frontend to S3 + CloudFront
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "taskify-frontend/**"
+      - ".github/workflows/frontend-cicd.yml"
+
+jobs:
+  deploy-frontend:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+
+      - name: Install dependencies
+        run: |
+          cd taskify-frontend
+          npm ci
+
+      - name: Build frontend
+        run: |
+          cd taskify-frontend
+          npm run build
+
+      - name: Deploy to S3
+        run: |
+          aws s3 sync taskify-frontend/build s3://${{ secrets.S3_BUCKET_FRONTEND }} --delete
+
+      - name: Invalidate CloudFront Cache
+        run: |
+          aws cloudfront create-invalidation \
+           --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
+           --paths "/*"
