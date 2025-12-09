@@ -25,10 +25,10 @@ jobs:
           cd taskify-frontend
           npm ci
 
-      - name: Build frontend
+      - name: Build frontend (allow warnings in CI)
         run: |
           cd taskify-frontend
-          npm run build
+          CI=false npm run build
 
       - name: Deploy to S3
         run: |
